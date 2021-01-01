@@ -12,7 +12,8 @@ use crossterm::event::KeyCode;
 #[derive(Debug, Default)]
 struct FailedGuesses(u8);
 
-struct LetterGuess(char);
+struct LetterGuessRight(char);
+struct LetterGuessWrong(char);
 
 #[derive(Debug, Default)]
 struct Guesses(HashSet<char>);
@@ -81,7 +82,8 @@ fn main() {
 		.add_resource(bevy::app::ScheduleRunnerSettings::run_loop(
 			std::time::Duration::from_millis(50), // 20 FPS
 		))
-		.add_event::<LetterGuess>()
+		.add_event::<LetterGuessRight>()
+		.add_event::<LetterGuessWrong>()
 		.init_resource::<Word>()
 		.init_resource::<FailedGuesses>()
 		.add_startup_system(create_hanger_system.system())
@@ -134,23 +136,21 @@ fn create_word_system(
 }
 
 fn was_correct_letter(
-	mut guess_reader: Local<EventReader<LetterGuess>>,
-	guesses: Res<Events<LetterGuess>>,
-	word: Res<Word>,
+	mut guess_reader: Local<EventReader<LetterGuessRight>>,
+	guesses: Res<Events<LetterGuessRight>>,
 	mut q: Query<(&Handle<Sprite>, &LetterPosition)>,
 	mut sprites: ResMut<Assets<Sprite>>,
 ) {
-	for letter in guess_reader.iter(&guesses).filter(|g| word.0.contains(g.0)) {
-		for sprite in
-			q.iter_mut().filter_map(
-				|(sprite, ch)| {
-					if ch.0 == letter.0 {
-						Some(sprite)
-					} else {
-						None
-					}
-				},
-			) {
+	for letter in guess_reader.iter(&guesses) {
+		for sprite in q.iter_mut().filter_map(
+			|(sprite, ch)| {
+				if ch.0 == letter.0 {
+					Some(sprite)
+				} else {
+					None
+				}
+			},
+		) {
 			if let Some(sprite) = sprites.get_mut(sprite) {
 				*sprite = Sprite::new(letter.0);
 			}
@@ -160,9 +160,8 @@ fn was_correct_letter(
 
 #[allow(clippy::too_many_arguments)]
 fn was_wrong_letter(
-	mut guess_reader: Local<EventReader<LetterGuess>>,
-	guesses: Res<Events<LetterGuess>>,
-	word: Res<Word>,
+	mut guess_reader: Local<EventReader<LetterGuessWrong>>,
+	guesses: Res<Events<LetterGuessWrong>>,
 	commands: &mut Commands,
 	window: Res<CrosstermWindow>,
 	mut sprites: ResMut<Assets<Sprite>>,
@@ -170,10 +169,7 @@ fn was_wrong_letter(
 	mut failed_guesses: ResMut<FailedGuesses>, // keep a separate tally
 	mut app_exit: ResMut<Events<AppExit>>,
 ) {
-	for _letter in guess_reader
-		.iter(&guesses)
-		.filter(|g| !word.0.contains(g.0))
-	{
+	for _letter in guess_reader.iter(&guesses) {
 		let part = &BODY_PARTS[failed_guesses.0 as usize];
 		commands.spawn(SpriteBundle {
 			sprite: sprites.add(Sprite::new(part.sprite)),
@@ -195,13 +191,19 @@ fn was_wrong_letter(
 fn get_input(
 	mut reader: Local<EventReader<KeyEvent>>,
 	keys: Res<Events<KeyEvent>>,
+	word: Res<Word>,
 	mut guesses: Local<Guesses>,
-	mut letters: ResMut<Events<LetterGuess>>,
+	mut right_letters: ResMut<Events<LetterGuessRight>>,
+	mut wrong_letters: ResMut<Events<LetterGuessWrong>>,
 ) {
 	for key in reader.iter(&keys) {
 		if let KeyCode::Char(c) = key.code {
 			if guesses.0.insert(c) {
-				letters.send(LetterGuess(c));
+				if word.0.contains(c) {
+					right_letters.send(LetterGuessRight(c));
+				} else {
+					wrong_letters.send(LetterGuessWrong(c));
+				}
 			}
 		}
 	}
