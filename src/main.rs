@@ -5,7 +5,7 @@
 ///  _/\_    |
 ///      ____|__
 ///
-use bevy::{app::AppExit, prelude::*};
+use bevy::{app::AppExit, prelude::*, utils::HashSet};
 use bevy_crossterm::prelude::*;
 use crossterm::event::KeyCode;
 
@@ -13,6 +13,9 @@ use crossterm::event::KeyCode;
 struct FailedGuesses(u8);
 
 struct LetterGuess(char);
+
+#[derive(Debug, Default)]
+struct Guesses(HashSet<char>);
 
 #[derive(Debug, Default)]
 struct Word(String);
@@ -167,13 +170,10 @@ fn was_wrong_letter(
 	mut failed_guesses: ResMut<FailedGuesses>, // keep a separate tally
 	mut app_exit: ResMut<Events<AppExit>>,
 ) {
-	for letter in guess_reader
+	for _letter in guess_reader
 		.iter(&guesses)
 		.filter(|g| !word.0.contains(g.0))
 	{
-		if contains_letter(&guesses, letter.0) {
-			continue;
-		}
 		let part = &BODY_PARTS[failed_guesses.0 as usize];
 		commands.spawn(SpriteBundle {
 			sprite: sprites.add(Sprite::new(part.sprite)),
@@ -195,17 +195,14 @@ fn was_wrong_letter(
 fn get_input(
 	mut reader: Local<EventReader<KeyEvent>>,
 	keys: Res<Events<KeyEvent>>,
+	mut guesses: Local<Guesses>,
 	mut letters: ResMut<Events<LetterGuess>>,
 ) {
 	for key in reader.iter(&keys) {
 		if let KeyCode::Char(c) = key.code {
-			letters.send(LetterGuess(c));
+			if guesses.0.insert(c) {
+				letters.send(LetterGuess(c));
+			}
 		}
 	}
-}
-
-fn contains_letter(guesses: &Events<LetterGuess>, letter: char) -> bool {
-	let mut iter = guesses.get_reader().iter(&guesses);
-	iter.next_back();
-	iter.any(|g| g.0 == letter)
 }
