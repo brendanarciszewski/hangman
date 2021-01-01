@@ -85,7 +85,6 @@ fn main() {
 		.add_event::<LetterGuessRight>()
 		.add_event::<LetterGuessWrong>()
 		.init_resource::<Word>()
-		.init_resource::<FailedGuesses>()
 		.add_startup_system(create_hanger_system.system())
 		.add_startup_system(create_word_system.system())
 		.add_system(get_input.system())
@@ -166,7 +165,7 @@ fn was_wrong_letter(
 	window: Res<CrosstermWindow>,
 	mut sprites: ResMut<Assets<Sprite>>,
 	mut stylemaps: ResMut<Assets<StyleMap>>,
-	mut failed_guesses: ResMut<FailedGuesses>, // keep a separate tally
+	mut failed_guesses: Local<FailedGuesses>, // keep a separate tally
 	mut app_exit: ResMut<Events<AppExit>>,
 ) {
 	for _letter in guess_reader.iter(&guesses) {
