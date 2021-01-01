@@ -134,11 +134,11 @@ fn was_correct_letter(
 	mut guess_reader: Local<EventReader<LetterGuess>>,
 	guesses: Res<Events<LetterGuess>>,
 	word: Res<Word>,
-	mut q: Query<(&mut Handle<Sprite>, &LetterPosition)>,
+	mut q: Query<(&Handle<Sprite>, &LetterPosition)>,
 	mut sprites: ResMut<Assets<Sprite>>,
 ) {
 	for letter in guess_reader.iter(&guesses).filter(|g| word.0.contains(g.0)) {
-		for mut sprite in
+		for sprite in
 			q.iter_mut().filter_map(
 				|(sprite, ch)| {
 					if ch.0 == letter.0 {
@@ -148,7 +148,9 @@ fn was_correct_letter(
 					}
 				},
 			) {
-			*sprite = sprites.add(Sprite::new(letter.0))
+			if let Some(sprite) = sprites.get_mut(sprite) {
+				*sprite = Sprite::new(letter.0);
+			}
 		}
 	}
 }
