@@ -78,14 +78,14 @@ fn main() {
 		.add_resource(bevy::app::ScheduleRunnerSettings::run_loop(
 			std::time::Duration::from_millis(50), // 20 FPS
 		))
-        .add_event::<LetterGuess>()
+		.add_event::<LetterGuess>()
 		.init_resource::<Word>()
 		.init_resource::<FailedGuesses>()
 		.add_startup_system(create_hanger_system.system())
-        .add_startup_system(create_word_system.system())
-        .add_system(get_input.system())
+		.add_startup_system(create_word_system.system())
+		.add_system(get_input.system())
 		.add_system(was_correct_letter.system())
-        .add_system(was_wrong_letter.system())
+		.add_system(was_wrong_letter.system())
 		.run();
 }
 
@@ -127,16 +127,16 @@ fn create_word_system(
 				..Default::default()
 			})
 			.with(LetterPosition(ch));
-    }
+	}
 }
 
 fn was_correct_letter(
 	mut guess_reader: Local<EventReader<LetterGuess>>,
 	guesses: Res<Events<LetterGuess>>,
-    word: Res<Word>,
-    mut q: Query<(&mut Handle<Sprite>, &LetterPosition)>,
-    mut sprites: ResMut<Assets<Sprite>>,
-){
+	word: Res<Word>,
+	mut q: Query<(&mut Handle<Sprite>, &LetterPosition)>,
+	mut sprites: ResMut<Assets<Sprite>>,
+) {
 	for letter in guess_reader.iter(&guesses).filter(|g| word.0.contains(g.0)) {
 		for mut sprite in
 			q.iter_mut().filter_map(
@@ -148,55 +148,62 @@ fn was_correct_letter(
 					}
 				},
 			) {
-            *sprite = sprites.add(Sprite::new(letter.0))
+			*sprite = sprites.add(Sprite::new(letter.0))
 		}
 	}
 }
 
 #[allow(clippy::too_many_arguments)]
 fn was_wrong_letter(
-    mut guess_reader: Local<EventReader<LetterGuess>>,
+	mut guess_reader: Local<EventReader<LetterGuess>>,
 	guesses: Res<Events<LetterGuess>>,
-    word: Res<Word>,
+	word: Res<Word>,
 	commands: &mut Commands,
 	window: Res<CrosstermWindow>,
 	mut sprites: ResMut<Assets<Sprite>>,
 	mut stylemaps: ResMut<Assets<StyleMap>>,
-    mut failed_guesses: ResMut<FailedGuesses>, // keep a separate tally
+	mut failed_guesses: ResMut<FailedGuesses>, // keep a separate tally
 	mut app_exit: ResMut<Events<AppExit>>,
 ) {
-    for letter in guess_reader.iter(&guesses).filter(|g| !word.0.contains(g.0)) {
-        if contains_letter(&guesses, letter.0) {
-            continue;
-        }
-        let part = &BODY_PARTS[failed_guesses.0 as usize];
-        commands.spawn(SpriteBundle {
-            sprite: sprites.add(Sprite::new(part.sprite)),
-            stylemap: stylemaps.add(StyleMap::default()),
-            position: Position {
-                x: window.width() as i32 / 5 + part.x,
-                y: HANGER_TOP + 1 + part.y,
-                z: 0,
-            },
-            ..Default::default()
-        });
-        failed_guesses.0 += 1;
-        if failed_guesses.0 as usize >= BODY_PARTS.len() {
-            app_exit.send(AppExit);
-        }
-    }
+	for letter in guess_reader
+		.iter(&guesses)
+		.filter(|g| !word.0.contains(g.0))
+	{
+		if contains_letter(&guesses, letter.0) {
+			continue;
+		}
+		let part = &BODY_PARTS[failed_guesses.0 as usize];
+		commands.spawn(SpriteBundle {
+			sprite: sprites.add(Sprite::new(part.sprite)),
+			stylemap: stylemaps.add(StyleMap::default()),
+			position: Position {
+				x: window.width() as i32 / 5 + part.x,
+				y: HANGER_TOP + 1 + part.y,
+				z: 0,
+			},
+			..Default::default()
+		});
+		failed_guesses.0 += 1;
+		if failed_guesses.0 as usize >= BODY_PARTS.len() {
+			app_exit.send(AppExit);
+		}
+	}
 }
 
-fn get_input(mut reader: Local<EventReader<KeyEvent>>, keys: Res<Events<KeyEvent>>, mut letters: ResMut<Events<LetterGuess>>) {
-    for key in reader.iter(&keys) {
-        if let KeyCode::Char(c) = key.code {
-            letters.send(LetterGuess(c));
-        }
-    }
+fn get_input(
+	mut reader: Local<EventReader<KeyEvent>>,
+	keys: Res<Events<KeyEvent>>,
+	mut letters: ResMut<Events<LetterGuess>>,
+) {
+	for key in reader.iter(&keys) {
+		if let KeyCode::Char(c) = key.code {
+			letters.send(LetterGuess(c));
+		}
+	}
 }
 
 fn contains_letter(guesses: &Events<LetterGuess>, letter: char) -> bool {
-    let mut iter = guesses.get_reader().iter(&guesses);
-    iter.next_back();
-    iter.any(|g| g.0 == letter)
+	let mut iter = guesses.get_reader().iter(&guesses);
+	iter.next_back();
+	iter.any(|g| g.0 == letter)
 }
