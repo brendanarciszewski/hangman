@@ -151,7 +151,7 @@ fn was_correct_letter(
 			},
 		) {
 			if let Some(sprite) = sprites.get_mut(sprite) {
-				*sprite = Sprite::new(letter.0);
+				sprite.update(letter.0);
 			}
 		}
 	}
