@@ -70,6 +70,22 @@ const BODY_PARTS: [BodyPart; 6] = [
 	},
 ];
 
+struct Hangman;
+
+impl Plugin for Hangman {
+    fn build(&self, app: &mut App) {
+		app
+			.add_event::<LetterGuessRight>()
+			.add_event::<LetterGuessWrong>()
+			.init_resource::<Word>()
+			.add_startup_system(create_hanger_system.system())
+			.add_startup_system(create_word_system.system())
+			.add_system(get_input.system())
+			.add_system(was_correct_letter.system())
+			.add_system(was_wrong_letter.system());
+    }
+}
+
 #[bevy_main]
 fn main() {
 	let mut settings = CrosstermWindowSettings::default();
@@ -83,14 +99,7 @@ fn main() {
 		.insert_resource(bevy::app::ScheduleRunnerSettings::run_loop(
 			std::time::Duration::from_millis(50), // 20 FPS
 		))
-		.add_event::<LetterGuessRight>()
-		.add_event::<LetterGuessWrong>()
-		.init_resource::<Word>()
-		.add_startup_system(create_hanger_system.system())
-		.add_startup_system(create_word_system.system())
-		.add_system(get_input.system())
-		.add_system(was_correct_letter.system())
-		.add_system(was_wrong_letter.system())
+		.add_plugin(Hangman)
 		.run();
 }
 
