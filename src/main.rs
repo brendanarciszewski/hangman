@@ -77,9 +77,9 @@ fn main() {
 	App::build()
 		.add_plugins(DefaultPlugins)
 		.add_plugin(CrosstermPlugin)
-		.add_resource(settings)
-		.add_resource(bevy::core::DefaultTaskPoolOptions::with_num_threads(1))
-		.add_resource(bevy::app::ScheduleRunnerSettings::run_loop(
+		.insert_resource(settings)
+		.insert_resource(bevy::core::DefaultTaskPoolOptions::with_num_threads(1))
+		.insert_resource(bevy::app::ScheduleRunnerSettings::run_loop(
 			std::time::Duration::from_millis(50), // 20 FPS
 		))
 		.add_event::<LetterGuessRight>()
@@ -94,12 +94,12 @@ fn main() {
 }
 
 fn create_hanger_system(
-	commands: &mut Commands,
+	mut commands: Commands,
 	window: Res<CrosstermWindow>,
 	mut sprites: ResMut<Assets<Sprite>>,
 	mut stylemaps: ResMut<Assets<StyleMap>>,
 ) {
-	commands.spawn(SpriteBundle {
+	commands.spawn().insert_bundle(SpriteBundle {
 		sprite: sprites.add(Sprite::new(HANGER)),
 		stylemap: stylemaps.add(StyleMap::default()),
 		position: Position {
@@ -112,7 +112,7 @@ fn create_hanger_system(
 }
 
 fn create_word_system(
-	commands: &mut Commands,
+	mut commands: Commands,
 	mut sprites: ResMut<Assets<Sprite>>,
 	mut stylemaps: ResMut<Assets<StyleMap>>,
 	mut word: ResMut<Word>,
@@ -120,7 +120,7 @@ fn create_word_system(
 	*word = Word("hello".to_string());
 	for (i, ch) in word.0.char_indices() {
 		commands
-			.spawn(SpriteBundle {
+			.spawn().insert_bundle(SpriteBundle {
 				sprite: sprites.add(Sprite::new('_')),
 				stylemap: stylemaps.add(StyleMap::default()),
 				position: Position {
@@ -130,17 +130,16 @@ fn create_word_system(
 				},
 				..Default::default()
 			})
-			.with(LetterPosition(ch));
+			.insert(LetterPosition(ch));
 	}
 }
 
 fn was_correct_letter(
-	mut guess_reader: Local<EventReader<LetterGuessRight>>,
-	guesses: Res<Events<LetterGuessRight>>,
+	mut guess_reader: EventReader<LetterGuessRight>,
 	mut q: Query<(&Handle<Sprite>, &LetterPosition)>,
 	mut sprites: ResMut<Assets<Sprite>>,
 ) {
-	for letter in guess_reader.iter(&guesses) {
+	for letter in guess_reader.iter() {
 		for sprite in q.iter_mut().filter_map(
 			|(sprite, ch)| {
 				if ch.0 == letter.0 {
@@ -159,18 +158,17 @@ fn was_correct_letter(
 
 #[allow(clippy::too_many_arguments)]
 fn was_wrong_letter(
-	mut guess_reader: Local<EventReader<LetterGuessWrong>>,
-	guesses: Res<Events<LetterGuessWrong>>,
-	commands: &mut Commands,
+	mut guess_reader: EventReader<LetterGuessWrong>,
+	mut commands: Commands,
 	window: Res<CrosstermWindow>,
 	mut sprites: ResMut<Assets<Sprite>>,
 	mut stylemaps: ResMut<Assets<StyleMap>>,
 	mut failed_guesses: Local<FailedGuesses>, // keep a separate tally
-	mut app_exit: ResMut<Events<AppExit>>,
+	mut app_exit: EventWriter<AppExit>,
 ) {
-	for _letter in guess_reader.iter(&guesses) {
+	for _letter in guess_reader.iter() {
 		let part = &BODY_PARTS[failed_guesses.0 as usize];
-		commands.spawn(SpriteBundle {
+		commands.spawn().insert_bundle(SpriteBundle {
 			sprite: sprites.add(Sprite::new(part.sprite)),
 			stylemap: stylemaps.add(StyleMap::default()),
 			position: Position {
@@ -188,14 +186,13 @@ fn was_wrong_letter(
 }
 
 fn get_input(
-	mut reader: Local<EventReader<KeyEvent>>,
-	keys: Res<Events<KeyEvent>>,
+	mut reader: EventReader<KeyEvent>,
 	word: Res<Word>,
 	mut guesses: Local<Guesses>,
-	mut right_letters: ResMut<Events<LetterGuessRight>>,
-	mut wrong_letters: ResMut<Events<LetterGuessWrong>>,
+	mut right_letters: EventWriter<LetterGuessRight>,
+	mut wrong_letters: EventWriter<LetterGuessWrong>,
 ) {
-	for key in reader.iter(&keys) {
+	for key in reader.iter() {
 		if let KeyCode::Char(c) = key.code {
 			if guesses.0.insert(c) {
 				if word.0.contains(c) {
