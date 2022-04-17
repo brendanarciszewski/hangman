@@ -21,6 +21,7 @@ struct Guesses(HashSet<char>);
 #[derive(Debug, Default)]
 struct Word(String);
 
+#[derive(Component)]
 struct LetterPosition(char);
 
 struct BodyPart {
@@ -74,7 +75,7 @@ fn main() {
 	let mut settings = CrosstermWindowSettings::default();
 	settings.set_title("Hello, World!");
 
-	App::build()
+	App::new()
 		.add_plugins(DefaultPlugins)
 		.add_plugin(CrosstermPlugin)
 		.insert_resource(settings)

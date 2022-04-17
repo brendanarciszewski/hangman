@@ -2,14 +2,14 @@
 name = "hangman"
 version = "0.1.0"
 authors = ["Brendan Arciszewski <git@brendanarciszewski.ca>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.5", default-features = false }
-bevy_crossterm = "0.5"
+bevy = { version = "0.6", default-features = false }
+bevy_crossterm = "0.6"
 crossterm = "0.18"
 
 [patch.crates-io]
-bevy_crossterm = { git = "https://github.com/brianbruggeman/bevy_crossterm.git", rev = "0c292b31" }
+bevy_crossterm = { git = "https://github.com/brendanarciszewski/bevy_crossterm.git", branch = "bevy-0.6-update" }
