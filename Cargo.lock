@@ -231,7 +231,7 @@ dependencies = [
 [[package]]
 name = "bevy_crossterm"
 version = "0.7.0"
-source = "git+https://github.com/brendanarciszewski/bevy_crossterm.git?branch=bevy-0.7-update#c82923bf12a5d6097ce91b3e084849bd09068eca"
+source = "git+https://github.com/brendanarciszewski/bevy_crossterm.git?branch=bevy-0.7-update#6844d4f54822139d8e40b0d46e2ffcc6361a3e89"
 dependencies = [
  "anyhow",
  "bevy",

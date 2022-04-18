@@ -77,6 +77,7 @@ impl Plugin for Hangman {
 		app.add_event::<LetterGuessRight>()
 			.add_event::<LetterGuessWrong>()
 			.init_resource::<Word>()
+			.add_startup_system(loading)
 			.add_startup_system(create_hanger_system)
 			.add_startup_system(create_word_system)
 			.add_system(get_input)
@@ -91,7 +92,6 @@ fn main() {
 	settings.set_title("Hello, World!");
 
 	App::new()
-		.add_plugin(bevy::hierarchy::HierarchyPlugin)
 		.add_plugins(DefaultCrosstermPlugins)
 		.insert_resource(settings)
 		.insert_resource(bevy::core::DefaultTaskPoolOptions::with_num_threads(1))
@@ -102,13 +102,17 @@ fn main() {
 		.run();
 }
 
+fn loading(mut cursor: ResMut<Cursor>) {
+	cursor.hidden = true;
+}
+
 fn create_hanger_system(
 	mut commands: Commands,
 	window: Res<CrosstermWindow>,
 	mut sprites: ResMut<Assets<Sprite>>,
 	mut stylemaps: ResMut<Assets<StyleMap>>,
 ) {
-	commands.spawn().insert_bundle(SpriteBundle {
+	commands.spawn_bundle(SpriteBundle {
 		sprite: sprites.add(Sprite::new(HANGER)),
 		stylemap: stylemaps.add(StyleMap::default()),
 		position: Position {
@@ -129,8 +133,7 @@ fn create_word_system(
 	*word = Word("hello".to_string());
 	for (i, ch) in word.0.char_indices() {
 		commands
-			.spawn()
-			.insert_bundle(SpriteBundle {
+			.spawn_bundle(SpriteBundle {
 				sprite: sprites.add(Sprite::new('_')),
 				stylemap: stylemaps.add(StyleMap::default()),
 				position: Position {
@@ -185,7 +188,7 @@ fn was_wrong_letter(
 ) {
 	for _letter in guess_reader.iter() {
 		let part = &BODY_PARTS[failed_guesses.0 as usize];
-		commands.spawn().insert_bundle(SpriteBundle {
+		commands.spawn_bundle(SpriteBundle {
 			sprite: sprites.add(Sprite::new(part.sprite)),
 			stylemap: stylemaps.add(StyleMap::default()),
 			position: Position {
