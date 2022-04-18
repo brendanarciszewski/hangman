@@ -148,6 +148,7 @@ fn was_correct_letter(
 	mut guess_reader: EventReader<LetterGuessRight>,
 	mut q: Query<(&Handle<Sprite>, &LetterPosition)>,
 	mut sprites: ResMut<Assets<Sprite>>,
+	mut app_exit: EventWriter<AppExit>,
 ) {
 	for letter in guess_reader.iter() {
 		for sprite in q.iter_mut().filter_map(
@@ -163,6 +164,12 @@ fn was_correct_letter(
 				sprite.update(letter.0);
 			}
 		}
+	}
+	if q.iter()
+		.filter(|(sprite, _)| sprites.get(*sprite).map(Sprite::data) == Some("_"))
+		.count() == 0
+	{
+		app_exit.send(AppExit);
 	}
 }
 
