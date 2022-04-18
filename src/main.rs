@@ -78,11 +78,11 @@ impl Plugin for Hangman {
 			.add_event::<LetterGuessRight>()
 			.add_event::<LetterGuessWrong>()
 			.init_resource::<Word>()
-			.add_startup_system(create_hanger_system.system())
-			.add_startup_system(create_word_system.system())
-			.add_system(get_input.system())
-			.add_system(was_correct_letter.system())
-			.add_system(was_wrong_letter.system());
+			.add_startup_system(create_hanger_system)
+			.add_startup_system(create_word_system)
+			.add_system(get_input)
+			.add_system(was_correct_letter)
+			.add_system(was_wrong_letter);
     }
 }
 
