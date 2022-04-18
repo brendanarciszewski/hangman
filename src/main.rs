@@ -73,9 +73,8 @@ const BODY_PARTS: [BodyPart; 6] = [
 struct Hangman;
 
 impl Plugin for Hangman {
-    fn build(&self, app: &mut App) {
-		app
-			.add_event::<LetterGuessRight>()
+	fn build(&self, app: &mut App) {
+		app.add_event::<LetterGuessRight>()
 			.add_event::<LetterGuessWrong>()
 			.init_resource::<Word>()
 			.add_startup_system(create_hanger_system)
@@ -83,7 +82,7 @@ impl Plugin for Hangman {
 			.add_system(get_input)
 			.add_system(was_correct_letter)
 			.add_system(was_wrong_letter);
-    }
+	}
 }
 
 #[bevy_main]
@@ -130,7 +129,8 @@ fn create_word_system(
 	*word = Word("hello".to_string());
 	for (i, ch) in word.0.char_indices() {
 		commands
-			.spawn().insert_bundle(SpriteBundle {
+			.spawn()
+			.insert_bundle(SpriteBundle {
 				sprite: sprites.add(Sprite::new('_')),
 				stylemap: stylemaps.add(StyleMap::default()),
 				position: Position {
