@@ -91,8 +91,8 @@ fn main() {
 	settings.set_title("Hello, World!");
 
 	App::new()
-		.add_plugins(DefaultPlugins)
-		.add_plugin(CrosstermPlugin)
+		.add_plugin(bevy::hierarchy::HierarchyPlugin)
+		.add_plugins(DefaultCrosstermPlugins)
 		.insert_resource(settings)
 		.insert_resource(bevy::core::DefaultTaskPoolOptions::with_num_threads(1))
 		.insert_resource(bevy::app::ScheduleRunnerSettings::run_loop(

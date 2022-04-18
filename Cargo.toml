@@ -9,7 +9,8 @@ edition = "2021"
 [dependencies]
 bevy = { version = "0.7", default-features = false }
 bevy_crossterm = "0.7"
-crossterm = "0.18"
+crossterm = "0.22"
 
-[patch.crates-io]
-bevy_crossterm = { git = "https://github.com/brendanarciszewski/bevy_crossterm.git", branch = "bevy-0.7-update" }
+[patch.crates-io.bevy_crossterm]
+git = "https://github.com/brendanarciszewski/bevy_crossterm.git"
+branch = "bevy-0.7-update"
